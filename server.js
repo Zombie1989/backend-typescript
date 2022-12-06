@@ -10,8 +10,12 @@ app.use(cors())
 app.use(express.urlencoded({ extended: true}))
 app.use(bodyParser.json())
 
+// routes/controllers
+const productsController = require('./controllers/ProductController')
+app.use('/api/products', productsController)
 
-const usersController = require('./controllers/usersControllers')
-app.use('/api/users', usersController)
 
+
+
+// stats web api
 app.listen(port, () => console.log(`WebApi is running on http://localhost:${port}`))
