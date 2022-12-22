@@ -1,122 +1,152 @@
-let products = require('../data/simulated_database')
+const { Router } = require('express')
 const express = require('express')
 const controller = express.Router()
 
+const productSchema = require('./schemas/productSchema')
 
-controller.param("articleNumber", (req, res, next, articleNumber) => {
-    req.product = products.find(x => x.articleNumber == articleNumber)
-    next()
+// unsceured routes
+controller.route('/').get(async(req, res) => {
+    const products = []
+    const list = await productSchema.find()
+    if(list) {
+        for(let product of list) {
+            console.log(product)
+             products.push({
+                 articleNumber: product._id,
+                 name: product.name,
+                 description: product.description,
+                 category: product.category,
+                 price: product.price,
+                 rating: product.rating,
+                 imageName: product.imageName,
+                 tag: product.tag
+              })
+        }
+        res.status(200).json(products)
+    } else
+        res.status(400).json
 })
 
-controller.param("tag", (req, res, next, tag) => {
-    req.products = products.filter(x => x.tag == tag)
-    next()
+controller.route('/:tag').get(async(req, res) => {
+    const products = []
+    const list = await productSchema.find({ tag: req.params.tag})
+    if(list) {
+        for(let product of list) {
+            products.push({
+                articleNumber: product._id,
+                name: product.name,
+                description: product.description,
+                category: product.category,
+                price: product.price,
+                rating: product.rating,
+                imageName: product.imageName,
+                tag: product.tag
+            })
+        }
+        res.status(200).json(products)
+    } else
+        res.status(400).json
 })
 
-
-controller.route('/article/:articleNumber').get((req, res) => {
-    if(req.product != undefined)
-        res.status(200).json(req.product)
-    else
-        res.status(404).json()
+controller.route('/:tag/:take').get(async(req, res) => {
+    const products = []
+    const list = await productSchema.find({ tag: req.params.tag}).limit(req.params.take)
+    if(list) {
+        for(let product of list) {
+            products.push({
+                articleNumber: product._id,
+                name: product.name,
+                description: product.description,
+                category: product.category,
+                price: product.price,
+                rating: product.rating,
+                imageName: product.imageName,
+                tag: product.tag
+            })
+        }
+        res.status(200).json(products)
+    } else
+        res.status(400).json
 })
 
-controller.route('/:tag').get((req, res) => {
-    if(req.products != undefined)
-        res.status(200).json(req.products)
-    else
-        res.status(404).json()
-})
-
-controller.route('/:tag/:take').get((req, res) => {
-    let list = []
-    
-    for (let i = 0; i < Number(req.params.take); i++)
-        list.push(req.products[i])
-
-        res.status(200).json(list)
-})
-
-
-controller.route('/').get((req, res) => {
-    res.status(200).json(products)
-})
-
-
-
-
-
-/*
-controller.param("articleNumber", (req, res, next, articleNumber) => {
-    req.product = products.find(product => product.articleNumber == articleNumber)
-    next()
-})
-
-// http://localhost:5000/api/product/
-
-controller.post('/', (httpRequest, httpResponse) => {
-
-    let product = {
-        articleNumber: (products[products.length -1])?.id > 0 ? (articleNumber[articleNumber.length -1])?.id + 1 : 1,
-        name: httpRequest.body.name,
-        description: httpRequest.body.description,
-        category: httpRequest.body.category,
-        price: httpRequest.body.price,
-        rating: httpRequest.body.rating,
-        imageName: httpRequest.body.imageName
-    }
-
-
-    products.push(product)
-    httpResponse.status(201).json(products)
-})
-.get((httpRequest, httpResponse) => {
-    httpResponse.status(200).json(products)
-})
-
-
-
-// http://localhost:5000/api/products/1
-
-controller.route("/:articleNumber")
-.get((httpRequest, httpResponse) => {
-    if(httpRequest.product != undefined)
-        httpResponse.status(200).json(httpRequest.product)
-    else
-        httpResponse.status(404).json()
-})
-
-.put((httpRequest, httpResponse) => {
-    if(httpRequest.product != undefined) {
-        products.forEach(product => {
-            if (product.articleNumber == httpRequest.product.articleNumber) {
-                product.name = httpRequest.body.name ? httpRequest.body.name : product.name
-                product.description = httpRequest.body.description ? httpRequest.body.description : product.description
-                product.category = httpRequest.body.category ? httpRequest.body.category : product.category
-                product.price = httpRequest.body.price ? httpRequest.body.price : product.price
-                product.rating = httpRequest.body.rating ? httpRequest.body.rating : product.rating
-                product.imageName = httpRequest.body.imageName ? httpRequest.body.imageName : product.imageName
-            }
+controller.route('/product/article/:articleNumber').get(async(req, res) => {
+    const product = await productSchema.findById(req.params.articleNumber)
+    if(product) {
+        res.status(200).json({
+            articleNumber: product._id,
+            name: product.name,
+            description: product.description,
+            category: product.category,
+            price: product.price,
+            rating: product.rating,
+            imageName: product.imageName,
+            tag: product.tag
         })
-        httpResponse.status(200).json(httpRequest.product)
-    } 
-    else
-        httpResponse.status(404).json()
+    } else
+        res.status(404).json()
 })
 
-.delete((httpRequest, httpResponse) => {
-    if(httpRequest.product != undefined) {
-        products = products.filter(product => product.articleNumber !== httpRequest.product.articleNumber)
-        httpResponse.status(204).json()
+
+// secured routes
+controller.route('/').post(async(req, res) => {
+    const { name, description, price, category, tag, imageName, rating } = req.body
+
+    if (!name || !price)
+        res.status(400).json({text: 'name and price is required.'})
+    
+        const item_exists = await productSchema.findOne({name, price})
+        if (item_exists)
+            res.status(409).json({text: 'a product with the same name already exists.'})
+        else {
+            const product = await productSchema.create({
+                name,
+                description,
+                price,
+                category,
+                tag,
+                imageName,
+                rating
+            })
+            if (product)
+                res.status(201).json({test: `product with the articlenumber ${product._id} was added successfully `})
+            else
+                res.status(400).json({text: 'something went wrong, please try again'})
+        }
+})
+
+controller.route('/:articleNumber').delete(async(req, res) => {
+    if(!req.params.articleNumber)
+        res.status(400).json('no articlenumber was specified')
+    else {
+        const item = await productSchema.findById(req.params.articleNumber)
+        if (item) {
+            await productSchema.remove(item)
+            res.status(200).json({text: `product with articlenumber ${req.params.articleNumber} was removed`})
+        } else {
+            res.status(404).json({text: `product with articlenumber ${req.params.articleNumber} was not found`})
+        }
     }
-
-    else
-        httpResponse.status(404).json({msg: 'not found'})
 })
 
-*/
+controller.route('/:articleNumber').put(async (req, res) => {
+    try { console.log(req)
+        await productSchema.findByIdAndUpdate(req.params.articleNumber, {
+            name: req.body.name,
+            description: req.body.description,
+            price: req.body.price,
+            category: req.body.category,
+            tag: req.body.tag,
+            rating: req.body.rating,
+            imageName: req.body.imageName
+        }) 
+        res.send('Product Updated!')
+    } catch(err) {
+        console.error(err.message);
+        res.send(400).send('Server Error')
+    }
+})
 
 
 
 
-module.exports = controller 
+module.exports = controller

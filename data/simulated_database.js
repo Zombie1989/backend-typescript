@@ -1,6 +1,3 @@
-const users = []
-module.exports = users
-
 const products = [
     {
         tag: "featured", 
@@ -17,7 +14,7 @@ const products = [
         articleNumber: "240e8e8d-7ee4-4133-93ae-08f50d27d0ab", 
         name: "Black Dress", 
         description: "",
-        category: "Dresses", 
+        category: "Dresses",
         price: 80, 
         rating: 5, 
         imageName: "https://win22imgstorage.blob.core.windows.net/images/black-dress.png"
@@ -27,7 +24,7 @@ const products = [
         articleNumber: "97b93d8c-e6c6-4f87-86c3-402639d84d13", 
         name: "Black top & pants", 
         description: "",
-        category: "Sets", 
+        category: "Sets",
         price: 150, 
         rating: 5, 
         imageName: "https://win22imgstorage.blob.core.windows.net/images/black-set.png"
@@ -56,7 +53,7 @@ const products = [
         tag: "",
         articleNumber: "b14c5884-f2ee-46a1-9a2e-811858d38276", 
         name: "Blue hoody & pants", 
-        description: "",category: "Sets", 
+        description: "",category: "Sets",
         price: 150, 
         rating: 5, 
         imageName: "https://win22imgstorage.blob.core.windows.net/images/blue-set.png"
@@ -199,7 +196,7 @@ const products = [
         category: "Pants", 
         price: 80, 
         rating: 5, 
-        imageName: "https://win22imgstorage.blob.core.windows.net/images/striped-pants.png"
+        imageName: "    "
     },
     { 
         tag: "featured", 
